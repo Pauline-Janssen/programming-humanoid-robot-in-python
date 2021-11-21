@@ -33,11 +33,12 @@ class PIDController(object):
         self.u = np.zeros(size)
         self.e1 = np.zeros(size)
         self.e2 = np.zeros(size)
+        self.e0 = np.zeros(size)
         # ADJUST PARAMETERS BELOW
         delay = 0
-        self.Kp = 0
+        self.Kp = 27
         self.Ki = 0
-        self.Kd = 0
+        self.Kd = 0.1
         self.y = deque(np.zeros(size), maxlen=delay + 1)
 
     def set_delay(self, delay):
@@ -53,8 +54,29 @@ class PIDController(object):
         @return control signal
         '''
         # YOUR CODE HERE
+        #print(target)
+        A0 = self.Kp + (self.Ki * self.dt) + (self.Kd / self.dt)
+        A1 = - self.Kp - 2 * (self.Kd / self.dt)
+        A2 = self.Kd / self.dt
+
+        #error = np.zeros(3) # error[2] = e(t-2), [1]=e(t-1), [0]=e(t) jeder error muss ein np array sein
+        #output = self.u
+        #loop wird implizit außerhalb dieser Funktion definiert
+
+
+        #self.e0 = target - sensor #da ich nicht wusste wie ich e1 aus dem alten_e0 brechnen sollte
+        # habe ich das erts so versucht
+
+        error0 = target - sensor
+
+        self.u = self.u + A0 * error0 +A1 * self.e1 +A2 * self.e2
+
+        self.e2 = self.e1
+        self.e1 = error0
+        #self.e1 = self.e0
 
         return self.u
+
 
 
 class PIDAgent(SparkAgent):

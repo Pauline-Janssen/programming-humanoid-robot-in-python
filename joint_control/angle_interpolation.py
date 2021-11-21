@@ -19,7 +19,7 @@
     # preceding the point, the second describes the curve following the point.
 '''
 
-
+#import keyframes
 from pid import PIDAgent
 from keyframes import hello
 
@@ -41,6 +41,9 @@ class AngleInterpolationAgent(PIDAgent):
     def angle_interpolation(self, keyframes, perception):
         target_joints = {}
         # YOUR CODE HERE
+        #perception is current angle of the joints
+        print(keyframes)
+
 
         return target_joints
 
