@@ -4,8 +4,7 @@
     complete the `StandingUpAgent.standing_up` function, e.g. call keyframe motion corresponds to current posture
 
 '''
-
-
+from joint_control.keyframes import leftBackToStand, leftBellyToStand, rightBackToStand, rightBellyToStand
 from recognize_posture import PostureRecognitionAgent
 
 
@@ -15,8 +14,18 @@ class StandingUpAgent(PostureRecognitionAgent):
         return super(StandingUpAgent, self).think(perception)
 
     def standing_up(self):
-        posture = self.posture
+        posture = self.posture # z.B. 'Crouch', 'Knee' etc.
         # YOUR CODE HERE
+        if self.set_time == False:
+
+            if posture in ['Back', 'Sit', 'Left', 'Headback', 'Right']:  # Left, 'Headback', 'Sit', 'Right'
+                self.keyframes = rightBackToStand()
+
+
+            elif posture in ['Belly', 'Frog', 'Crouch']:
+                self.keyframes = rightBellyToStand()
+
+            #print('posture', posture)
 
 
 class TestStandingUpAgent(StandingUpAgent):
@@ -29,7 +38,7 @@ class TestStandingUpAgent(StandingUpAgent):
                  sync_mode=True):
         super(TestStandingUpAgent, self).__init__(simspark_ip, simspark_port, teamname, player_id, sync_mode)
         self.stiffness_on_off_time = 0
-        self.stiffness_on_cycle = 10  # in seconds
+        self.stiffness_on_cycle = 12  # in seconds
         self.stiffness_off_cycle = 3  # in seconds
 
     def think(self, perception):
