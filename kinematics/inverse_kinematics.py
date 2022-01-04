@@ -14,6 +14,7 @@ from forward_kinematics import ForwardKinematicsAgent
 from numpy.matlib import identity
 import numpy as np
 from numpy import random, linalg
+import scipy.optimize
 from scipy.optimize import fmin
 
 class InverseKinematicsAgent(ForwardKinematicsAgent):
@@ -24,8 +25,10 @@ class InverseKinematicsAgent(ForwardKinematicsAgent):
         :param transform: 4x4 transform matrix, target matrix
         :return: list of joint angles
         '''
-        joint_angles = []
+        #joint_angles = []
         # YOUR CODE HERE
+        #angles_curr = np.array([self.target_joints.get(j, 0.0) for j in self.chains[effector_name]], np.float32)
+        angles_bound = [self.sensor_limits.get(j, (-np.pi, np.pi)) for j in self.chains[effector_name]]
 
         def error_func(angles, target, effect_name):
             d = {j: 0.0 for j in self.joint_names} #erstelle dict mit joints und alle winkel auf 0.0
@@ -39,12 +42,29 @@ class InverseKinematicsAgent(ForwardKinematicsAgent):
             return linalg.norm(e)
 
         #func = lambda t: error_func(t, transform, effector_name)
-        joint_angles = fmin(        # fmin(function, x0, args...)
+        #angles_init = angles_curr + (np.random.rand(*angles_curr.shape) - 0.5) * 0.01 #random in startwerte
+        #print('bounds', angles_bound, 'init', angles_init)
+        m = scipy.optimize.minimize(   #fmin(        # fmin(function, x0, args...) m = joint_angles
             error_func,
+            #angles_init,
             np.random.rand(len(self.chains[effector_name])),
-            (transform, effector_name),
-            xtol=10**-9, ftol=10**-9)
-        return joint_angles
+            args=(transform, effector_name),
+            tol=10**-9,
+            #ftol=10**-9,
+            bounds=angles_bound)
+
+
+
+        '''m = fmin(        # fmin(function, x0, args...) m = joint_angles
+            error_func,
+            # angles_init,
+            np.random.rand(len(self.chains[effector_name])),
+            args=(transform, effector_name),
+            xtol=10 ** -9,
+            ftol=10**-9)
+            #bounds=angles_bound)
+        return m'''
+        return m.x
 
     def set_transforms(self, effector_name, transform):
         '''solve the inverse kinematics and control joints use the results
@@ -79,8 +99,19 @@ if __name__ == '__main__':
     T = identity(4)
     #T[-1, 0] =
     T[-1, 1] = 0.05
-    T[-1, 2] = -0.2879
+    T[-1, 2] = -0.26 #-0.2879
         #-0.26
 
     agent.set_transforms('LLeg', T)
+
+    import matplotlib.pyplot as plt
+    from forward_kinematics import draw
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+    ax.set_box_aspect([1, 1, 1])
+    plt.subplots_adjust(left=0, bottom=0, right=1, top=1, wspace=0, hspace=0)
+    draw(0, ax, agent)
+    ax.plot(T[-1, 0], T[-1, 1], T[-1, 2], 'cx')
+    plt.show(block=True)
+
     agent.run()
